@@ -34,7 +34,7 @@ var Plugin = /** @class */ (function (_super) {
             var chunks = [];
             req.on('data', function (chunk) { chunks.push(chunk); });
             req.on('end', function () {
-                logServerRequest(req.headers, Buffer.concat(chunks));
+                logServerRequest(Buffer.concat(chunks));
                 // Convert from ilp-packet object field names described in:
                 // https://github.com/interledger/rfcs/blob/de237e8b9250d83d5e9d9dec58e7aca88c887b57/0000-ilp-over-http.md#request
                 // to the http header names described in:
@@ -42,6 +42,7 @@ var Plugin = /** @class */ (function (_super) {
                 ts_promise_1["default"].resolve().then(function () {
                     return _this._dataHandler(Buffer.concat(chunks));
                 }).then(function (response) {
+                    logServerResponse(200, response);
                     return res.end(response);
                 })["catch"](function (err) {
                     logServerResponse(500, err);
@@ -70,7 +71,7 @@ var Plugin = /** @class */ (function (_super) {
     Plugin.prototype.isConnected = function () { return this._connected; };
     Plugin.prototype.sendData = function (packet) {
         logClientRequest(packet);
-        return node_fetch_1.fetch(this.opts.peerUrl, {
+        return node_fetch_1["default"](this.opts.peerUrl, {
             method: 'POST',
             body: packet
         }).then(function (res) {

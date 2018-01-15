@@ -18,6 +18,7 @@
   "homepage": "https://github.com/michielbdejong/ilp-plugin-http#readme",
   "dependencies": {
     "@types/node": "^9.3.0",
+    "@types/node-fetch": "^1.6.7",
     "debug": "^3.1.0",
     "eventemitter2": "^5.0.1",
     "ilp-packet": "^2.1.2",

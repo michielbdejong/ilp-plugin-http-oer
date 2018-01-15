@@ -1,7 +1,7 @@
 import { EventEmitter2 } from 'eventemitter2'
 import { deserializeIlpPacket, serializeIlpPrepare, deserializeIlpPrepare, serializeIlpFulfill, serializeIlpReject, Type, IlpFulfill, IlpRejection /* == IlpReject */ } from 'ilp-packet'
 import { createServer } from 'http'
-import { fetch } from 'node-fetch'
+import fetch from 'node-fetch'
 import * as Debug from 'debug'
 import Promise from 'ts-promise'
 
@@ -29,7 +29,7 @@ class Plugin extends EventEmitter2 {
       let chunks = []
       req.on('data', (chunk) => { chunks.push(chunk) })
       req.on('end', () => {
-        logServerRequest(req.headers, Buffer.concat(chunks))
+        logServerRequest(Buffer.concat(chunks))
         // Convert from ilp-packet object field names described in:
         // https://github.com/interledger/rfcs/blob/de237e8b9250d83d5e9d9dec58e7aca88c887b57/0000-ilp-over-http.md#request
         // to the http header names described in:
@@ -37,6 +37,7 @@ class Plugin extends EventEmitter2 {
         Promise.resolve().then(() => {
           return this._dataHandler(Buffer.concat(chunks))
         }).then(response => {
+          logServerResponse(200, response)
           return res.end(response)
         }).catch(err => {
           logServerResponse(500, err)
