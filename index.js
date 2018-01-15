@@ -35,10 +35,6 @@ var Plugin = /** @class */ (function (_super) {
             req.on('data', function (chunk) { chunks.push(chunk); });
             req.on('end', function () {
                 logServerRequest(Buffer.concat(chunks));
-                // Convert from ilp-packet object field names described in:
-                // https://github.com/interledger/rfcs/blob/de237e8b9250d83d5e9d9dec58e7aca88c887b57/0000-ilp-over-http.md#request
-                // to the http header names described in:
-                // https://github.com/interledgerjs/ilp-packet/blob/7724aa28330d567e0afc9512ab966d11a0d19d3c/README.md#ilpprepare-ilpfulfill-ilpreject
                 ts_promise_1["default"].resolve().then(function () {
                     return _this._dataHandler(Buffer.concat(chunks));
                 }).then(function (response) {
