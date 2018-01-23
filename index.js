@@ -93,8 +93,8 @@ var Plugin = /** @class */ (function (_super) {
     Plugin.prototype.registerDataHandler = function (handler) { this._dataHandler = handler; };
     Plugin.prototype.deregisterDataHandler = function (handler) { delete this._dataHandler; };
     Plugin.prototype.sendMoney = function (amount) { return ts_promise_1["default"].resolve(undefined); };
-    Plugin.prototype.registerMoneyHandler = function (handler) { this._dataHandler = handler; };
-    Plugin.prototype.deregisterMoneyHandler = function (handler) { delete this._dataHandler; };
+    Plugin.prototype.registerMoneyHandler = function (handler) { this._moneyHandler = handler; };
+    Plugin.prototype.deregisterMoneyHandler = function (handler) { delete this._moneyHandler; };
     return Plugin;
 }(eventemitter2_1.EventEmitter2));
 Plugin.version = 2;
