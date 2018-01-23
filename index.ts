@@ -3,7 +3,7 @@ import { deserializeIlpPacket, serializeIlpPrepare, deserializeIlpPrepare, seria
 import { createServer } from 'http'
 import fetch from 'node-fetch'
 import * as Debug from 'debug'
-import Promise from 'ts-promise'
+// import Promise from 'ts-promise'
 
 const logPlugin = Debug('ilp-plugin-http')
 const logServerRequest = Debug('Server Request')
@@ -16,6 +16,7 @@ class Plugin extends EventEmitter2 {
   opts: any
   server: any
   _dataHandler: Function
+  _moneyHandler: Function
   _connected: Boolean
   static version: Number
 
