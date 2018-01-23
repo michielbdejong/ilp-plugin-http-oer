@@ -24,6 +24,7 @@
     "eventemitter2": "^5.0.1",
     "ilp-packet": "^2.1.2",
     "node-fetch": "^1.7.3",
-    "ts-promise": "^1.0.0"
+    "ts-promise": "^1.0.0",
+    "tsc": "^1.20150623.0"
   }
 }
