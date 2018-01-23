@@ -1,96 +1,121 @@
 import { EventEmitter2 } from 'eventemitter2'
-import { deserializeIlpPacket, serializeIlpPrepare, deserializeIlpPrepare, serializeIlpFulfill, serializeIlpReject, Type, IlpFulfill, IlpRejection /* == IlpReject */ } from 'ilp-packet'
-import { createServer } from 'http'
+import { createServer, ServerRequest, ServerResponse } from 'http'
 import fetch from 'node-fetch'
 import * as Debug from 'debug'
-import Promise from 'ts-promise'
+const debug = Debug('ilp-plugin-http')
 
-const logPlugin = Debug('ilp-plugin-http')
-const logServerRequest = Debug('Server Request')
-const logClientRequest = Debug('Client-Request')
-const logClientResponse = Debug('Client-Response')
-const logServerResponse = Debug('Server.Response')
+export interface PluginHttpOerOpts {
+  port?: number,
+  peerUrl: string
+}
 
+export interface DataHandler {
+  (data: Buffer): Promise<Buffer>
+}
 
-class Plugin extends EventEmitter2 {
-  opts: any
-  server: any
-  _dataHandler: Function
-  _connected: Boolean
-  static version: Number
+export interface MoneyHandler {
+  (amount: string): Promise<void>
+}
 
-  constructor (opts) {
+export default class PluginHttpOer extends EventEmitter2 {
+  protected port?: number
+  protected peerUrl: string
+  protected server: any
+  protected dataHandler: DataHandler
+  protected moneyHandler: MoneyHandler
+  protected connected: Boolean
+  static readonly version = 2
+
+  constructor (opts: PluginHttpOerOpts) {
     super()
-    this.opts = opts
+    this.port = opts.port
+    this.peerUrl = opts.peerUrl
+    this.dataHandler = defaultDataHandler
+    this.moneyHandler = defaultMoneyHandler
   }
 
-  connect () {
-    const promise = (this.opts.port ? new Promise(resolve => {
-        this.server = createServer(this.handle.bind(this))
-        this.server.listen(this.opts.port, () => {
-          logPlugin('listening for http on port ' + this.opts.port)
-          resolve(undefined)
+  async connect (): Promise<void> {
+    if (this.port) {
+      this.server = createServer(this.handle.bind(this))
+      await new Promise((resolve, reject) => {
+        this.server.listen(this.port, (err: any) => {
+          if (err) {
+            reject(err)
+          } else {
+            resolve()
+          }
         })
-      }) : Promise.resolve(undefined))
-    return promise.then(() => {
-      this._connected = true
+      })
+      debug('connected and listening for http on port ' + this.port)
+      this.connected = true
       this.emit('connect')
-    })
+    }
   }
-  disconnect () {
-    return new Promise(resolve => this.server.close(() => {
-      this._connected = false
-      this.emit('disconnect')
-      resolve(undefined)
-    }))
-  }
-  isConnected () { return this._connected }
 
-  handle(req, res) {
-    let chunks = []
-    req.on('data', (chunk) => { chunks.push(chunk) })
-    req.on('end', () => {
-      logServerRequest(Buffer.concat(chunks))
-      Promise.resolve().then(() => {
-        return this._dataHandler(Buffer.concat(chunks))
-      }).then(response => {
-        logServerResponse(200, response)
-        return res.end(response)
-      }).catch(err => {
-        logServerResponse(500, err)
-        res.writeHead(500)
-        res.end(err.message) // only for debugging, you probably want to disable this line in production
+  async disconnect (): Promise<void> {
+    await new Promise((resolve, reject) => {
+      this.server.close((err: any) => {
+        if (err) {
+          reject(err)
+        } else {
+          resolve()
+        }
       })
     })
+    debug('disconnected')
+    this.connected = false
+    this.emit('disconnect')
   }
 
-  sendData (packet) {
-    logClientRequest(packet)
-    return fetch(this.opts.peerUrl, {
+  isConnected (): Boolean {
+    return this.connected
+  }
+
+  protected handle(req: ServerRequest, res: ServerResponse): void {
+    let chunks: Buffer[] = []
+    req.on('data', (chunk: Buffer) => { chunks.push(chunk) })
+    req.on('end', async () => {
+      try {
+        const responseToSend = await this.dataHandler(Buffer.concat(chunks))
+        res.end(responseToSend)
+      } catch (err) {
+        debug('error handling data:', err)
+        res.writeHead(500)
+        res.end()
+      }
+    })
+  }
+
+  async sendData (packet: Buffer): Promise<Buffer> {
+    const response = await fetch(this.peerUrl, {
       method: 'POST',
       body: packet
-    }).then(res => {
-      return res.buffer().then(body => {
-        logClientResponse(res.status, body)
-        return body
-      })
-    }).catch(err => {
-      return serializeIlpReject({
-        code:          'P00',
-        // name:          'plugin bug',
-        triggeredBy:   'ilp-plugin-http',
-        // triggeredAt:   new Date(),
-        message:       err.message,
-        data: Buffer.from([])
-      })
     })
+    return response.buffer()
   }
 
-  registerDataHandler (handler) { this._dataHandler = handler }
-  deregisterDataHandler (handler) { delete this._dataHandler }
-  sendMoney (amount) { return Promise.resolve(undefined) }
-  registerMoneyHandler (handler) { this._moneyHandler = handler }
-  deregisterMoneyHandler (handler) { delete this._moneyHandler }
+  async sendMoney (amount: string) {
+    // TODO implement something here
+    return
+  }
+
+  registerDataHandler (handler: DataHandler) { this.dataHandler = handler }
+  deregisterDataHandler () { this.dataHandler = defaultDataHandler }
+  registerMoneyHandler (handler: MoneyHandler) { this.moneyHandler = handler }
+  deregisterMoneyHandler () { this.moneyHandler = defaultMoneyHandler }
 }
-Plugin.version = 2
-module.exports = Plugin
+
+async function defaultDataHandler (data: Buffer): Promise<Buffer> {
+  const error = new Error('no data handler registered')
+  error.name = 'NoDataHandlerError'
+  throw error
+}
+
+async function defaultMoneyHandler (amount: string): Promise<void> {
+  return
+}
+
+// Support both the Node.js and ES6 module exports
+const es6Exports = exports
+module.exports = PluginHttpOer
+Object.assign(module.exports, es6Exports)

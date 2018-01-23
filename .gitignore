@@ -57,3 +57,10 @@ typings/
 # dotenv environment variables file
 .env
 
+# VS Code
+.vscode
+
+# Ignore compiled typescript output
+**/*.js
+**/*.d.ts
+**/*.js.map
