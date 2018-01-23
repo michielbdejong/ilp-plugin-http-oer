@@ -30,30 +30,16 @@ var Plugin = /** @class */ (function (_super) {
     }
     Plugin.prototype.connect = function () {
         var _this = this;
-        this.server = http_1.createServer(function (req, res) {
-            var chunks = [];
-            req.on('data', function (chunk) { chunks.push(chunk); });
-            req.on('end', function () {
-                logServerRequest(Buffer.concat(chunks));
-                ts_promise_1["default"].resolve().then(function () {
-                    return _this._dataHandler(Buffer.concat(chunks));
-                }).then(function (response) {
-                    logServerResponse(200, response);
-                    return res.end(response);
-                })["catch"](function (err) {
-                    logServerResponse(500, err);
-                    res.writeHead(500);
-                    res.end(err.message); // only for debugging, you probably want to disable this line in production
-                });
-            });
-        });
-        return new ts_promise_1["default"](function (resolve) {
+        var promise = (this.opts.port ? new ts_promise_1["default"](function (resolve) {
+            _this.server = http_1.createServer(_this.handle.bind(_this));
             _this.server.listen(_this.opts.port, function () {
                 logPlugin('listening for http on port ' + _this.opts.port);
-                _this._connected = true;
-                _this.emit('connect');
                 resolve(undefined);
             });
+        }) : ts_promise_1["default"].resolve(undefined));
+        return promise.then(function () {
+            _this._connected = true;
+            _this.emit('connect');
         });
     };
     Plugin.prototype.disconnect = function () {
@@ -65,6 +51,24 @@ var Plugin = /** @class */ (function (_super) {
         }); });
     };
     Plugin.prototype.isConnected = function () { return this._connected; };
+    Plugin.prototype.handle = function (req, res) {
+        var _this = this;
+        var chunks = [];
+        req.on('data', function (chunk) { chunks.push(chunk); });
+        req.on('end', function () {
+            logServerRequest(Buffer.concat(chunks));
+            ts_promise_1["default"].resolve().then(function () {
+                return _this._dataHandler(Buffer.concat(chunks));
+            }).then(function (response) {
+                logServerResponse(200, response);
+                return res.end(response);
+            })["catch"](function (err) {
+                logServerResponse(500, err);
+                res.writeHead(500);
+                res.end(err.message); // only for debugging, you probably want to disable this line in production
+            });
+        });
+    };
     Plugin.prototype.sendData = function (packet) {
         logClientRequest(packet);
         return node_fetch_1["default"](this.opts.peerUrl, {

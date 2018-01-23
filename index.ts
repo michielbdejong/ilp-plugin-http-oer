@@ -25,30 +25,16 @@ class Plugin extends EventEmitter2 {
   }
 
   connect () {
-    this.server = createServer((req, res) => {
-      let chunks = []
-      req.on('data', (chunk) => { chunks.push(chunk) })
-      req.on('end', () => {
-        logServerRequest(Buffer.concat(chunks))
-        Promise.resolve().then(() => {
-          return this._dataHandler(Buffer.concat(chunks))
-        }).then(response => {
-          logServerResponse(200, response)
-          return res.end(response)
-        }).catch(err => {
-          logServerResponse(500, err)
-          res.writeHead(500)
-          res.end(err.message) // only for debugging, you probably want to disable this line in production
+    const promise = (this.opts.port ? new Promise(resolve => {
+        this.server = createServer(this.handle.bind(this))
+        this.server.listen(this.opts.port, () => {
+          logPlugin('listening for http on port ' + this.opts.port)
+          resolve(undefined)
         })
-      })
-    })
-    return new Promise(resolve => {
-      this.server.listen(this.opts.port, () => {
-        logPlugin('listening for http on port ' + this.opts.port)
-        this._connected = true
-        this.emit('connect')
-        resolve(undefined)
-      })
+      }) : Promise.resolve(undefined))
+    return promise.then(() => {
+      this._connected = true
+      this.emit('connect')
     })
   }
   disconnect () {
@@ -59,6 +45,24 @@ class Plugin extends EventEmitter2 {
     }))
   }
   isConnected () { return this._connected }
+
+  handle(req, res) {
+    let chunks = []
+    req.on('data', (chunk) => { chunks.push(chunk) })
+    req.on('end', () => {
+      logServerRequest(Buffer.concat(chunks))
+      Promise.resolve().then(() => {
+        return this._dataHandler(Buffer.concat(chunks))
+      }).then(response => {
+        logServerResponse(200, response)
+        return res.end(response)
+      }).catch(err => {
+        logServerResponse(500, err)
+        res.writeHead(500)
+        res.end(err.message) // only for debugging, you probably want to disable this line in production
+      })
+    })
+  }
 
   sendData (packet) {
     logClientRequest(packet)
