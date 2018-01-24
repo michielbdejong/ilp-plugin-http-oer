@@ -6,4 +6,4 @@ npm install
 tsc index.ts
 
 # Connecting to Amundsen
-To connect to Amundsen using this protocol, use btp+wss://:${token}@amundsen.ilpdemo.org:1801/ where ${token} is your own unique token, which you should generate randomly. You can only connect as a client (sender), not as a server (receiver).
+To connect to Amundsen using this protocol, use `btp+wss://:${token}@amundsen.ilpdemo.org:1801/` where ${token} is your own unique token, which you should generate randomly. You can only connect as a client (sender), not as a server (receiver).
