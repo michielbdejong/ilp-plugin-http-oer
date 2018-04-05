@@ -4,7 +4,9 @@
   "description": "Implementation of https://github.com/interledger/rfcs/blob/de237e8b9250d83d5e9d9dec58e7aca88c887b57/0000-ilp-over-http.md",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "tsc",
+    "prepare": "npm run build"
   },
   "repository": {
     "type": "git",
@@ -17,12 +19,14 @@
   },
   "homepage": "https://github.com/michielbdejong/ilp-plugin-http#readme",
   "dependencies": {
-    "@types/node": "^9.3.0",
-    "@types/node-fetch": "^1.6.7",
     "debug": "^3.1.0",
     "eventemitter2": "^5.0.1",
-    "ilp-packet": "^2.1.2",
-    "node-fetch": "^1.7.3",
-    "ts-promise": "^1.0.0"
+    "node-fetch": "^1.7.3"
+  },
+  "devDependencies": {
+    "@types/debug": "0.0.30",
+    "@types/node": "^9.3.0",
+    "@types/node-fetch": "^1.6.7",
+    "typescript": "^2.6.2"
   }
 }
