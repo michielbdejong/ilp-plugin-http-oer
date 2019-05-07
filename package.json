@@ -19,14 +19,14 @@
   },
   "homepage": "https://github.com/michielbdejong/ilp-plugin-http#readme",
   "dependencies": {
-    "debug": "^3.1.0",
+    "debug": "^4.1.1",
     "eventemitter2": "^5.0.1",
-    "node-fetch": "^1.7.3"
+    "node-fetch": "^2.5.0"
   },
   "devDependencies": {
-    "@types/debug": "0.0.30",
-    "@types/node": "^9.3.0",
-    "@types/node-fetch": "^1.6.7",
-    "typescript": "^2.6.2"
+    "@types/debug": "4.1.4",
+    "@types/node": "^12.0.0",
+    "@types/node-fetch": "^2.3.3",
+    "typescript": "^3.4.5"
   }
 }
