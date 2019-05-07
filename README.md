@@ -1,4 +1,7 @@
 # ilp-plugin-http-oer
+
+[![Greenkeeper badge](https://badges.greenkeeper.io/michielbdejong/ilp-plugin-http-oer.svg)](https://greenkeeper.io/)
+
 Simple peer-to-peer plugin that POSTs ILP packets over HTTP, written in typescript
 
 npm install typescript -g
